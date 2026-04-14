@@ -6,7 +6,7 @@ from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 
-from config import Config
+from config import Config, assert_db_not_localhost_in_cloud
 
 db = SQLAlchemy()
 mail = Mail()
@@ -19,6 +19,7 @@ from app import models as _models  # noqa: E402, F401 — registra tablas en met
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    assert_db_not_localhost_in_cloud(app.config["SQLALCHEMY_DATABASE_URI"])
 
     os.makedirs(os.path.join(app.root_path, "static", "generated"), exist_ok=True)
 

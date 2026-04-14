@@ -50,6 +50,36 @@ def _resolve_database_url() -> str:
     return "mysql+pymysql://root:@127.0.0.1:3306/fe_reflexiones?charset=utf8mb4"
 
 
+def mysql_uri_uses_loopback(uri: str) -> bool:
+    if not uri or "mysql" not in uri.lower():
+        return False
+    u = uri.lower()
+    return "127.0.0.1" in u or "@localhost:" in u or "://localhost:" in u or "@localhost/" in u
+
+
+def running_on_managed_hosting() -> bool:
+    """Render, Railway, Fly.io, Cloud Run, etc. suelen definir alguna de estas variables."""
+    return bool(
+        os.environ.get("RENDER")
+        or os.environ.get("RENDER_EXTERNAL_URL")
+        or os.environ.get("IS_RENDER")
+        or os.environ.get("RAILWAY_ENVIRONMENT")
+        or os.environ.get("RAILWAY_PROJECT_ID")
+        or os.environ.get("FLY_APP_NAME")
+        or os.environ.get("K_SERVICE")
+    )
+
+
+def assert_db_not_localhost_in_cloud(uri: str) -> None:
+    if running_on_managed_hosting() and mysql_uri_uses_loopback(uri):
+        raise RuntimeError(
+            "MySQL está configurado en 127.0.0.1/localhost, pero en la nube la base "
+            "va en otro servicio. En el panel del hosting: borra DATABASE_URL de ejemplo, "
+            "o pon la URI real (host del proveedor, no localhost). En Railway referencia "
+            "MYSQL_URL o MYSQLHOST/MYSQLUSER/MYSQLPASSWORD/MYSQLDATABASE desde el plugin MySQL."
+        )
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY") or "dev-cambiar-en-produccion"
     SQLALCHEMY_DATABASE_URI = _resolve_database_url()
