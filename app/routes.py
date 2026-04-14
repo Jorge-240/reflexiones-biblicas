@@ -1,5 +1,4 @@
 import os
-import random
 from threading import Thread
 from sqlalchemy.exc import IntegrityError
 
@@ -7,6 +6,7 @@ from flask import Blueprint, abort, current_app, flash, redirect, render_templat
 from flask_login import current_user, login_required, login_user, logout_user
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from app import db
+from app.bible_library import BIBLE_BOOK_GROUPS, BIBLE_REFLECTIONS, select_bible_reflection
 from app.emails import send_password_reset_email, send_support_to_developer, send_welcome_email
 from app.forms import (
     ChangePasswordForm,
@@ -18,7 +18,6 @@ from app.forms import (
     ResetPasswordForm,
     SupportForm,
 )
-from app.gemini_service import generar_reflexion_biblica, is_quota_error
 from app.image_generator import crear_tarjeta_reflexion
 from app.models import CuratedReflection, GeneratedReflection, SupportReport, User
 
@@ -33,7 +32,17 @@ def _serializer():
 @main_bp.route("/")
 def index():
     reflexiones = CuratedReflection.query.order_by(CuratedReflection.orden.asc(), CuratedReflection.id.asc()).limit(6).all()
-    return render_template("index.html", reflexiones=reflexiones)
+    return render_template("index.html", reflexiones=reflexiones, bible_groups=BIBLE_BOOK_GROUPS)
+
+
+@main_bp.route("/biblia")
+def biblia():
+    return render_template(
+        "biblia.html",
+        bible_groups=BIBLE_BOOK_GROUPS,
+        total_books=len(BIBLE_BOOK_GROUPS[0]["books"]) + len(BIBLE_BOOK_GROUPS[1]["books"]),
+        total_reflections=len(BIBLE_REFLECTIONS),
+    )
 
 
 @main_bp.route("/reflexiones")
@@ -47,7 +56,16 @@ def reflexiones():
         .all()
     )
     form = GeminiReflectionForm()
-    return render_template("reflexiones.html", curated=curated, generadas=generadas, form=form)
+    used_refs = {g.referencia_sugerida for g in generadas if g.referencia_sugerida}
+    remaining_count = len([r for r in BIBLE_REFLECTIONS if r["reference"] not in used_refs])
+    return render_template(
+        "reflexiones.html",
+        curated=curated,
+        generadas=generadas,
+        form=form,
+        remaining_count=remaining_count,
+        total_reflections=len(BIBLE_REFLECTIONS),
+    )
 
 
 @main_bp.route("/reflexiones/generar", methods=["POST"])
@@ -59,36 +77,28 @@ def generar_reflexion_imagen():
             flash(err[0], "danger")
         return redirect(url_for("main.reflexiones"))
     tema = (form.tema.data or "").strip() or None
-    try:
-        data = generar_reflexion_biblica(tema)
-    except Exception as e:
-        # Si Gemini está sin cuota, seguimos con una reflexión curada para no bloquear la función.
-        if is_quota_error(e):
-            curated = CuratedReflection.query.order_by(CuratedReflection.orden.asc(), CuratedReflection.id.asc()).all()
-            if curated:
-                chosen = random.choice(curated)
-                data = {
-                    "cita_corta": chosen.cita,
-                    "referencia": chosen.referencia,
-                    "reflexion": chosen.reflexion,
-                }
-                flash(
-                    "La IA está temporalmente sin cuota. Generamos una tarjeta con una reflexión curada mientras se restablece.",
-                    "warning",
-                )
-            else:
-                flash(str(e), "danger")
-                return redirect(url_for("main.reflexiones"))
-        else:
-            flash(str(e), "danger")
-            return redirect(url_for("main.reflexiones"))
+    used_refs = {
+        row.referencia_sugerida
+        for row in GeneratedReflection.query.with_entities(GeneratedReflection.referencia_sugerida)
+        .filter_by(user_id=current_user.id)
+        .all()
+        if row.referencia_sugerida
+    }
+    data = select_bible_reflection(used_references=used_refs, query=tema)
+    if not data:
+        flash(
+            "Ya recibiste todas las reflexiones bíblicas disponibles en esta versión. "
+            "No repetiremos una anterior.",
+            "info",
+        )
+        return redirect(url_for("main.reflexiones"))
 
     out_dir = os.path.join(current_app.static_folder, "generated")
     try:
         rel_path = crear_tarjeta_reflexion(
-            cita=data["cita_corta"],
-            referencia=data["referencia"],
-            reflexion=data["reflexion"],
+            cita=data["verse"],
+            referencia=data["reference"],
+            reflexion=data["reflection"],
             output_dir=out_dir,
         )
     except Exception as e:
@@ -99,13 +109,13 @@ def generar_reflexion_imagen():
     gr = GeneratedReflection(
         user_id=current_user.id,
         tema_o_peticion=peticion,
-        texto_gemini=data["reflexion"],
-        referencia_sugerida=data["referencia"],
+        texto_gemini=data["reflection"],
+        referencia_sugerida=data["reference"],
         archivo_relativo=rel_path,
     )
     db.session.add(gr)
     db.session.commit()
-    flash("Reflexión generada. Puedes descargar la imagen abajo.", "success")
+    flash("Reflexión bíblica real generada. Puedes descargar la imagen abajo.", "success")
     return redirect(url_for("main.reflexiones"))
 
 
@@ -186,6 +196,7 @@ def registro():
         return redirect(url_for("main.reflexiones"))
     form = RegistrationForm()
     if form.validate_on_submit():
+        app = current_app._get_current_object()
         u = User(
             nombre=form.nombre.data.strip(),
             apellido=form.apellido.data.strip(),
@@ -216,9 +227,9 @@ def registro():
         # Entramos al perfil inmediatamente; el correo va en segundo plano.
         login_user(u)
 
-        def _send_welcome_async(user_id: int):
+        def _send_welcome_async(flask_app, user_id: int):
             try:
-                with current_app.app_context():
+                with flask_app.app_context():
                     user = User.query.get(user_id)
                     if user:
                         send_welcome_email(user)
@@ -227,7 +238,7 @@ def registro():
                 # (Podemos mejorar esto con logs en el futuro.)
                 pass
 
-        Thread(target=_send_welcome_async, args=(u.id,), daemon=True).start()
+        Thread(target=_send_welcome_async, args=(app, u.id), daemon=True).start()
 
         flash(
             "Cuenta creada y tu perfil está listo. Si el correo de bienvenida no llegó todavía, revisa unos minutos más tarde.",

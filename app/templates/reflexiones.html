@@ -4,16 +4,19 @@
 <h1 class="h3 mb-4">Reflexiones bíblicas</h1>
 
 <section class="card card-surface p-4 rounded-4 mb-5">
-  <h2 class="h5 text-white mb-3">Crear tarjeta con IA (Gemini)</h2>
+  <h2 class="h5 text-white mb-3">Crear tarjeta bíblica real</h2>
   <p class="text-muted small mb-3">
-    Escribe un tema opcional (familia, trabajo, gratitud, etc.). La IA redactará una reflexión breve basada en la Escritura
-    y generaremos una imagen para descargar.
+    Escribe un libro o tema opcional. La aplicación elegirá una reflexión basada en un pasaje bíblico real
+    y generará una imagen para descargar. Mientras existan nuevas disponibles para tu cuenta, no se repetirá una anterior.
+  </p>
+  <p class="small text-muted mb-3">
+    Disponibles para ti: <strong class="text-white">{{ remaining_count }}</strong> de <strong class="text-white">{{ total_reflections }}</strong>.
   </p>
   <form method="post" action="{{ url_for('main.generar_reflexion_imagen') }}" class="row g-3 align-items-end">
     {{ form.hidden_tag() }}
     <div class="col-md-8">
       {{ form.tema.label(class="form-label") }}
-      {{ form.tema(class="form-control bg-dark text-white border-secondary", placeholder="Ej.: confiar en Dios en tiempos difíciles") }}
+      {{ form.tema(class="form-control bg-dark text-white border-secondary", placeholder="Ej.: Juan, esperanza, ansiedad, fortaleza, perdón") }}
       {% for e in form.tema.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
     </div>
     <div class="col-md-4">

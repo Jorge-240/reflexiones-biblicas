@@ -83,11 +83,11 @@ class ChangePasswordForm(FlaskForm):
 
 class GeminiReflectionForm(FlaskForm):
     tema = StringField(
-        "Tema o petición (opcional)",
+        "Libro, tema o petición (opcional)",
         validators=[Optional(), Length(max=500)],
-        description="Ej.: gratitud en familia, paz en el trabajo, perdón…",
+        description="Ej.: Juan, gratitud, paz, perdón, esperanza…",
     )
-    submit = SubmitField("Generar reflexión e imagen")
+    submit = SubmitField("Generar reflexión bíblica e imagen")
 
 
 class SupportForm(FlaskForm):

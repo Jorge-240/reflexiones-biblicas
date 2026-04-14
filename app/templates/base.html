@@ -17,6 +17,7 @@
       <div class="collapse navbar-collapse" id="navMain">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
           <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.biblia') }}">Biblia</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('main.soporte') }}">Soporte</a></li>
           {% if current_user.is_authenticated %}
           <li class="nav-item"><a class="nav-link" href="{{ url_for('main.reflexiones') }}">Reflexiones</a></li>

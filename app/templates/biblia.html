@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Biblia integrada{% endblock %}
+{% block content %}
+<section class="card card-surface p-4 rounded-4 mb-5">
+  <h1 class="h3 mb-3">Biblia integrada en la app</h1>
+  <p class="text-muted mb-2">
+    Esta sección organiza los <strong class="text-white">{{ total_books }}</strong> libros de la Biblia por testamentos.
+    Las reflexiones generadas en tu cuenta salen de pasajes bíblicos reales y se sirven sin repetición mientras haya nuevas disponibles.
+  </p>
+  <p class="text-muted mb-0">
+    Catálogo actual de reflexiones reales cargadas en la app: <strong class="text-white">{{ total_reflections }}</strong>.
+  </p>
+</section>
+
+<div class="row g-4">
+  {% for group in bible_groups %}
+  <div class="col-lg-6">
+    <section class="card card-surface p-4 rounded-4 h-100">
+      <h2 class="h5 mb-3">{{ group.titulo }}</h2>
+      <div class="row row-cols-1 row-cols-md-2 g-2">
+        {% for book in group.books %}
+        <div class="col">
+          <div class="border border-secondary border-opacity-25 rounded-3 px-3 py-2 small">{{ book }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
