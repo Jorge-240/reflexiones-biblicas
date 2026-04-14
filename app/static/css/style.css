@@ -2,7 +2,8 @@
   --app-bg: #0f1419;
   --app-surface: #161d27;
   --app-text: #e8eaef;
-  --app-muted: #9aa3b2;
+  /* Un poco más claro para buen contraste en fondo oscuro */
+  --app-muted: #c2c9d6;
   --gold: #d4af37;
   --gold-dim: #b8922b;
 }
@@ -17,6 +18,15 @@
   color: var(--app-text);
 }
 
+/* Bootstrap usa .text-muted; en tema oscuro necesitamos más contraste */
+.text-muted {
+  color: var(--app-muted) !important;
+}
+
+.lead {
+  color: var(--app-muted);
+}
+
 .bg-nav {
   background: linear-gradient(90deg, #121820, #1a2433) !important;
 }
@@ -25,6 +35,10 @@
   background: var(--app-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--app-text);
+}
+
+.card-surface .form-label {
+  color: var(--app-muted);
 }
 
 .link-gold {
