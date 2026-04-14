@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Inicio — Fe y Reflexión{% endblock %}
+{% block content %}
+<section class="row align-items-center g-4 mb-5">
+  <div class="col-lg-7">
+    <p class="text-uppercase small text-muted mb-2 tracking-wide">Un espacio de pausa y esperanza</p>
+    <h1 class="hero-title mb-3">Palabra que ilumina el día a día</h1>
+    <p class="lead text-muted">
+      Esta comunidad digital te invita a detenerte un momento, leer la Escritura y dejar que su mensaje
+      acompañe tu camino. Aquí encontrarás reflexiones breves, recursos para crecer y herramientas
+      para crear tarjetas inspiradoras que puedes compartir o guardar.
+    </p>
+    {% if not current_user.is_authenticated %}
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <a class="btn btn-gold" href="{{ url_for('auth.registro') }}">Crear cuenta gratuita</a>
+      <a class="btn btn-outline-light" href="{{ url_for('auth.login') }}">Ya tengo usuario</a>
+    </div>
+    {% else %}
+    <a class="btn btn-gold mt-2" href="{{ url_for('main.reflexiones') }}">Ir a reflexiones</a>
+    {% endif %}
+  </div>
+  <div class="col-lg-5">
+    <div class="card card-surface p-4 rounded-4 shadow">
+      <h2 class="h5 text-white mb-3">Qué encontrarás</h2>
+      <ul class="list-unstyled mb-0 text-muted">
+        <li class="mb-2">Reflexiones tomadas de la Biblia, con explicación sencilla.</li>
+        <li class="mb-2">Generación de mensajes con inteligencia artificial (Gemini) sobre un tema que elijas.</li>
+        <li class="mb-2">Imágenes descargables con diseño cuidado para compartir.</li>
+        <li>Perfil editable y recuperación segura de contraseña por correo.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="mb-2">
+  <h2 class="h4 mb-4">Reflexiones de hoy</h2>
+  <div class="row g-4">
+    {% for r in reflexiones %}
+    <div class="col-md-6 col-xl-4">
+      <article class="card card-surface h-100 rounded-4 p-4">
+        <h3 class="h6 text-white">{{ r.titulo }}</h3>
+        <p class="small text-warning mb-2">{{ r.referencia }}</p>
+        <p class="verse-mark small fst-italic text-muted mb-3">{{ r.cita }}</p>
+        <p class="small mb-0 text-muted">{{ r.reflexion }}</p>
+      </article>
+    </div>
+    {% else %}
+    <p class="text-muted">Pronto añadiremos más reflexiones.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Mi perfil{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Configuración del perfil</h1>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card card-surface p-4 rounded-4 h-100">
+      <h2 class="h5 text-white mb-3">Datos del perfil</h2>
+      <form method="post" novalidate>
+        {{ profile_form.hidden_tag() }}
+        <div class="mb-3">
+          {{ profile_form.nombre.label(class="form-label") }}
+          {{ profile_form.nombre(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in profile_form.nombre.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ profile_form.apellido.label(class="form-label") }}
+          {{ profile_form.apellido(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in profile_form.apellido.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ profile_form.username.label(class="form-label") }}
+          {{ profile_form.username(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in profile_form.username.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ profile_form.email.label(class="form-label") }}
+          {{ profile_form.email(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in profile_form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        {{ profile_form.save_profile(class="btn btn-gold") }}
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card card-surface p-4 rounded-4 h-100">
+      <h2 class="h5 text-white mb-3">Cambiar contraseña</h2>
+      <form method="post" novalidate>
+        {{ pwd_form.hidden_tag() }}
+        <div class="mb-3">
+          {{ pwd_form.current_password.label(class="form-label") }}
+          {{ pwd_form.current_password(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in pwd_form.current_password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ pwd_form.password.label(class="form-label") }}
+          {{ pwd_form.password(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in pwd_form.password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ pwd_form.password2.label(class="form-label") }}
+          {{ pwd_form.password2(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in pwd_form.password2.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        {{ pwd_form.change_password(class="btn btn-outline-light") }}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

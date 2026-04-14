@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Nueva contraseña{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card card-surface p-4 rounded-4">
+      <h1 class="h4 mb-3">Establece una nueva contraseña</h1>
+      <form method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.password.label(class="form-label") }}
+          {{ form.password(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in form.password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ form.password2.label(class="form-label") }}
+          {{ form.password2(class="form-control bg-dark text-white border-secondary") }}
+          {% for e in form.password2.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        {{ form.submit(class="btn btn-gold w-100") }}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bienvenido</title>
+</head>
+<body style="margin:0;padding:0;background:#0f1419;font-family:Georgia,'Times New Roman',serif;color:#e8eaef;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0f1419;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:linear-gradient(145deg,#161d27,#121820);border-radius:16px;overflow:hidden;border:1px solid rgba(212,175,55,0.35);">
+          <tr>
+            <td style="padding:28px 32px 8px;text-align:center;">
+              <p style="margin:0;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#c9b04a;">Fe y Reflexión</p>
+              <h1 style="margin:12px 0 8px;font-size:26px;line-height:1.25;color:#f5f6f8;">Un abrazo fraterno, {{ user.nombre }}</h1>
+              <p style="margin:0;font-size:15px;line-height:1.6;color:#b8c0ce;">Gracias por dar este paso y formar parte de nuestra comunidad.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 24px;">
+              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent);margin:8px 0 20px;"></div>
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#d3d8e0;">
+                Nos alegra recibirte. Este espacio nació para acercar la Palabra a la rutina con gentileza:
+                pequeñas lecturas, reflexiones sencillas y herramientas para crear mensajes que animen a otros.
+              </p>
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#d3d8e0;">
+                Cuando quieras, entra con tu usuario y explora. Si necesitas ayuda, el enlace de soporte está siempre disponible en la web.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px auto 8px;">
+                <tr>
+                  <td style="border-radius:999px;background:linear-gradient(180deg,#d4af37,#b8922b);">
+                    <a href="{{ base_url }}/auth/login" style="display:inline-block;padding:14px 28px;font-weight:700;font-size:15px;color:#1a1406;text-decoration:none;font-family:system-ui,-apple-system,sans-serif;">
+                      Ir a mi cuenta
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#8f98a8;text-align:center;">
+                “El Señor te bendiga y te guarde.” — Números 6:24 <span style="color:#5c6575;">(deseo de bendición para tu caminar)</span>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 28px;text-align:center;background:rgba(0,0,0,0.2);">
+              <p style="margin:0;font-size:12px;color:#6c7380;">Este mensaje fue enviado porque te registraste en Fe y Reflexión.</p>
+              <p style="margin:8px 0 0;font-size:12px;color:#6c7380;">{{ base_url }}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

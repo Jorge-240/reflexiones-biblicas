@@ -1,0 +1,60 @@
+:root {
+  --app-bg: #0f1419;
+  --app-surface: #161d27;
+  --app-text: #e8eaef;
+  --app-muted: #9aa3b2;
+  --gold: #d4af37;
+  --gold-dim: #b8922b;
+}
+
+.bg-app {
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(212, 175, 55, 0.12), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(80, 120, 200, 0.12), transparent 50%),
+    var(--app-bg);
+}
+
+.text-app {
+  color: var(--app-text);
+}
+
+.bg-nav {
+  background: linear-gradient(90deg, #121820, #1a2433) !important;
+}
+
+.card-surface {
+  background: var(--app-surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--app-text);
+}
+
+.link-gold {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.link-gold:hover {
+  color: #e6c85c;
+}
+
+.btn-gold {
+  background: linear-gradient(180deg, var(--gold), var(--gold-dim));
+  border: none;
+  color: #1a1406;
+  font-weight: 600;
+}
+
+.btn-gold:hover {
+  filter: brightness(1.05);
+  color: #1a1406;
+}
+
+.hero-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.verse-mark {
+  border-left: 3px solid var(--gold);
+  padding-left: 1rem;
+}

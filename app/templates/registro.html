@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Registro — Fe y Reflexión{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card card-surface p-4 rounded-4">
+      <h1 class="h4 mb-3">Crear cuenta</h1>
+      <p class="text-muted small mb-4">Completa tus datos. Te enviaremos un correo de bienvenida al registrarte.</p>
+      <form method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="row g-3">
+          <div class="col-md-6">
+            {{ form.nombre.label(class="form-label") }}
+            {{ form.nombre(class="form-control bg-dark text-white border-secondary") }}
+            {% for e in form.nombre.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="col-md-6">
+            {{ form.apellido.label(class="form-label") }}
+            {{ form.apellido(class="form-control bg-dark text-white border-secondary") }}
+            {% for e in form.apellido.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="col-md-6">
+            {{ form.username.label(class="form-label") }}
+            {{ form.username(class="form-control bg-dark text-white border-secondary") }}
+            {% for e in form.username.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="col-md-6">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control bg-dark text-white border-secondary") }}
+            {% for e in form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="col-md-6">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control bg-dark text-white border-secondary") }}
+            {% for e in form.password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="col-md-6">
+            {{ form.password2.label(class="form-label") }}
+            {{ form.password2(class="form-control bg-dark text-white border-secondary") }}
+            {% for e in form.password2.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+        <div class="mt-4">
+          {{ form.submit(class="btn btn-gold") }}
+          <a class="btn btn-outline-light ms-2" href="{{ url_for('auth.login') }}">Volver al login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
