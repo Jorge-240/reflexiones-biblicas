@@ -39,10 +39,8 @@ def generar_reflexion_biblica(tema_usuario: str | None, used_references: list[st
     Devuelve un dict con: cita_corta, referencia, reflexion (párrafo breve), tono, libro.
     """
     _configure()
-    # Priorizamos 1.5-flash que suele tener cuotas más estables en el tier gratuito
-    model_names = ("gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash")
-    
-    # Contexto de pasajes usados
+    # Usamos modelos con nombres compatibles con la versión de google-generativeai y el tier gratuito
+    model_names = ("gemini-1.5-flash-latest", "gemini-pro")
     history_context = ""
     if used_references:
         history_context = f"\nPasajes ya usados (EVITA ESTOS): {', '.join(used_references[-15:])}"
