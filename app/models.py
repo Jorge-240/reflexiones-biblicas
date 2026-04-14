@@ -59,7 +59,8 @@ class GeneratedReflection(db.Model):
     tema_o_peticion = db.Column(db.String(500), nullable=False)
     texto_gemini = db.Column(db.Text, nullable=False)
     referencia_sugerida = db.Column(db.String(200), nullable=True)
-    archivo_relativo = db.Column(db.String(512), nullable=False)
+    libro = db.Column(db.String(100), nullable=True)
+    archivo_relativo = db.Column(db.String(512), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 

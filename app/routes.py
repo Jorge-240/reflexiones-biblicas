@@ -18,7 +18,7 @@ from app.forms import (
     ResetPasswordForm,
     SupportForm,
 )
-from app.image_generator import crear_tarjeta_reflexion
+from app.gemini_service import generar_reflexion_biblica
 from app.models import CuratedReflection, GeneratedReflection, SupportReport, User
 
 main_bp = Blueprint("main", __name__)
@@ -52,19 +52,16 @@ def reflexiones():
     generadas = (
         GeneratedReflection.query.filter_by(user_id=current_user.id)
         .order_by(GeneratedReflection.created_at.desc())
-        .limit(24)
+        .limit(30)
         .all()
     )
     form = GeminiReflectionForm()
-    used_refs = {g.referencia_sugerida for g in generadas if g.referencia_sugerida}
-    remaining_count = len([r for r in BIBLE_REFLECTIONS if r["reference"] not in used_refs])
     return render_template(
         "reflexiones.html",
         curated=curated,
         generadas=generadas,
         form=form,
-        remaining_count=remaining_count,
-        total_reflections=len(BIBLE_REFLECTIONS),
+        total_reflections="Infinitas",
     )
 
 
@@ -76,47 +73,52 @@ def generar_reflexion_imagen():
         for err in form.errors.values():
             flash(err[0], "danger")
         return redirect(url_for("main.reflexiones"))
+
     tema = (form.tema.data or "").strip() or None
-    used_refs = {
+    
+    # Obtenemos referencias previas para evitar repetición inmediata
+    used_refs = [
         row.referencia_sugerida
         for row in GeneratedReflection.query.with_entities(GeneratedReflection.referencia_sugerida)
         .filter_by(user_id=current_user.id)
+        .order_by(GeneratedReflection.created_at.desc())
+        .limit(50)
         .all()
         if row.referencia_sugerida
-    }
-    data = select_bible_reflection(used_references=used_refs, query=tema)
-    if not data:
-        flash(
-            "Ya recibiste todas las reflexiones bíblicas disponibles en esta versión. "
-            "No repetiremos una anterior.",
-            "info",
-        )
-        return redirect(url_for("main.reflexiones"))
+    ]
 
-    out_dir = os.path.join(current_app.static_folder, "generated")
     try:
-        rel_path = crear_tarjeta_reflexion(
-            cita=data["verse"],
-            referencia=data["reference"],
-            reflexion=data["reflection"],
-            output_dir=out_dir,
-        )
+        data = generar_reflexion_biblica(tema_usuario=tema, used_references=used_refs)
     except Exception as e:
-        flash(f"No se pudo crear la imagen: {e}", "danger")
+        flash(f"No se pudo generar la reflexión: {e}", "danger")
         return redirect(url_for("main.reflexiones"))
 
     peticion = tema or "(tema libre)"
     gr = GeneratedReflection(
         user_id=current_user.id,
         tema_o_peticion=peticion,
-        texto_gemini=data["reflection"],
-        referencia_sugerida=data["reference"],
-        archivo_relativo=rel_path,
+        texto_gemini=data["reflexion"],
+        referencia_sugerida=data["referencia"],
+        libro=data.get("libro"),
+        archivo_relativo=None, # Ya no generamos imágenes físicas
     )
     db.session.add(gr)
     db.session.commit()
-    flash("Reflexión bíblica real generada. Puedes descargar la imagen abajo.", "success")
+    
+    flash("¡Nueva tarjeta bíblica creada!", "success")
     return redirect(url_for("main.reflexiones"))
+
+
+@main_bp.route("/biblia/historial/<libro>")
+@login_required
+def historial_por_libro(libro: str):
+    # Filtramos por libro y por el usuario actual (privacidad)
+    tarjetas = (
+        GeneratedReflection.query.filter_by(user_id=current_user.id, libro=libro)
+        .order_by(GeneratedReflection.created_at.desc())
+        .all()
+    )
+    return render_template("historial_libro.html", libro=libro, tarjetas=tarjetas)
 
 
 @main_bp.route("/descargas/<int:reflection_id>")

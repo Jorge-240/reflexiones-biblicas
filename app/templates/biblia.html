@@ -2,25 +2,24 @@
 {% block title %}Biblia integrada{% endblock %}
 {% block content %}
 <section class="card card-surface p-4 rounded-4 mb-5">
-  <h1 class="h3 mb-3">Biblia integrada en la app</h1>
-  <p class="text-muted mb-2">
-    Esta sección organiza los <strong class="text-white">{{ total_books }}</strong> libros de la Biblia por testamentos.
-    Las reflexiones generadas en tu cuenta salen de pasajes bíblicos reales y se sirven sin repetición mientras haya nuevas disponibles.
-  </p>
+  <h1 class="h3 mb-3">Biblia integrada</h1>
   <p class="text-muted mb-0">
-    Catálogo actual de reflexiones reales cargadas en la app: <strong class="text-white">{{ total_reflections }}</strong>.
+    Haz clic en cualquier libro para ver el <strong>historial de tarjetas</strong> que has generado para ese pasaje. 
+    Tu colección es privada y crece con cada reflexión que descubres.
   </p>
 </section>
 
 <div class="row g-4">
   {% for group in bible_groups %}
   <div class="col-lg-6">
-    <section class="card card-surface p-4 rounded-4 h-100">
-      <h2 class="h5 mb-3">{{ group.titulo }}</h2>
+    <section class="card card-surface p-4 rounded-4 h-100 border-0 shadow-sm">
+      <h2 class="h5 mb-4 text-gold border-bottom border-secondary border-opacity-25 pb-2">{{ group.titulo }}</h2>
       <div class="row row-cols-1 row-cols-md-2 g-2">
         {% for book in group.books %}
         <div class="col">
-          <div class="border border-secondary border-opacity-25 rounded-3 px-3 py-2 small">{{ book }}</div>
+          <a href="{{ url_for('main.historial_por_libro', libro=book) }}" class="book-link d-block border border-secondary border-opacity-25 rounded-3 px-3 py-2 small text-decoration-none text-white">
+            <i class="bi bi-journal-text me-2 text-gold"></i> {{ book }}
+          </a>
         </div>
         {% endfor %}
       </div>
@@ -28,4 +27,18 @@
   </div>
   {% endfor %}
 </div>
+
+<style>
+.book-link {
+    transition: all 0.2s ease;
+    background: rgba(255,255,255,0.02);
+}
+.book-link:hover {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: #d4af37 !important;
+    color: #d4af37 !important;
+    transform: translateX(5px);
+}
+.text-gold { color: #d4af37; }
+</style>
 {% endblock %}

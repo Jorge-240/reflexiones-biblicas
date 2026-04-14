@@ -56,8 +56,20 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()
-        from app import seed
+        
+        # Migración manual para añadir columnas nuevas si existen tablas previas
+        from sqlalchemy import text
+        try:
+            db.session.execute(text("ALTER TABLE generated_reflections ADD COLUMN IF NOT EXISTS libro VARCHAR(100) AFTER referencia_sugerida;"))
+            db.session.execute(text("ALTER TABLE generated_reflections MODIFY archivo_relativo VARCHAR(512) NULL;"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            # En algunos sabores de MySQL 'IF NOT EXISTS' en ALTER TABLE no funciona igual, 
+            # así que manejamos el error de columna duplicada silenciosamente.
+            pass
 
+        from app import seed
         seed.seed_curated_reflections()
 
     return app

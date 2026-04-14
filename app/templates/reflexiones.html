@@ -5,12 +5,9 @@
 
 <section class="card card-surface p-4 rounded-4 mb-5">
   <h2 class="h5 text-white mb-3">Crear tarjeta bíblica real</h2>
-  <p class="text-muted small mb-3">
-    Escribe un libro o tema opcional. La aplicación elegirá una reflexión basada en un pasaje bíblico real
-    y generará una imagen para descargar. Mientras existan nuevas disponibles para tu cuenta, no se repetirá una anterior.
-  </p>
-  <p class="small text-muted mb-3">
-    Disponibles para ti: <strong class="text-white">{{ remaining_count }}</strong> de <strong class="text-white">{{ total_reflections }}</strong>.
+  <p class="text-muted small mb-4">
+    Escribe un libro o tema opcional. La aplicación usará inteligencia artificial (Gemini) para elegir una reflexión única basada en un pasaje bíblico real. 
+    Las reflexiones son <strong>infinitas</strong> y nunca se repiten.
   </p>
   <form method="post" action="{{ url_for('main.generar_reflexion_imagen') }}" class="row g-3 align-items-end">
     {{ form.hidden_tag() }}
@@ -20,21 +17,26 @@
       {% for e in form.tema.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
     </div>
     <div class="col-md-4">
-      {{ form.submit(class="btn btn-gold w-100") }}
+      {{ form.submit(class="btn btn-gold w-100 py-2") }}
     </div>
   </form>
 </section>
 
 <section class="mb-5">
-  <h2 class="h5 mb-3">Selección para ti</h2>
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="h5 mb-0">Selección para ti</h2>
+    <span class="badge bg-gold text-dark ms-3 p-2 rounded-3 small">Curadas</span>
+  </div>
   <div class="row g-4">
     {% for r in curated %}
     <div class="col-md-6 col-xl-4">
-      <article class="card card-surface h-100 rounded-4 p-4">
-        <h3 class="h6 text-white">{{ r.titulo }}</h3>
-        <p class="small text-warning mb-2">{{ r.referencia }}</p>
-        <p class="verse-mark small fst-italic text-muted mb-3">{{ r.cita }}</p>
-        <p class="small mb-0 text-muted">{{ r.reflexion }}</p>
+      <article class="card card-surface h-100 rounded-4 p-4 border-0">
+        <h3 class="h6 text-white fw-bold">{{ r.titulo }}</h3>
+        <p class="small text-gold mb-2 fw-bold">{{ r.referencia }}</p>
+        <div class="border-start border-warning border-2 ps-3 my-3">
+          <p class="small fst-italic text-white mb-0">"{{ r.cita }}"</p>
+        </div>
+        <p class="small mb-0 text-muted lh-base">{{ r.reflexion }}</p>
       </article>
     </div>
     {% endfor %}
@@ -42,24 +44,68 @@
 </section>
 
 <section>
-  <h2 class="h5 mb-3">Tus tarjetas generadas</h2>
+  <h2 class="h5 mb-3">Tus tarjetas generadas recientemente</h2>
   {% if generadas %}
   <div class="row g-4">
     {% for g in generadas %}
     <div class="col-md-6 col-lg-4">
-      <div class="card card-surface rounded-4 overflow-hidden">
-        <img src="{{ url_for('static', filename=g.archivo_relativo) }}" class="card-img-top" alt="Reflexión generada">
-        <div class="card-body">
-          <p class="small text-muted mb-1">{{ g.referencia_sugerida or '' }}</p>
-          <p class="small mb-2">{{ g.texto_gemini[:180] }}{% if g.texto_gemini|length > 180 %}…{% endif %}</p>
-          <a class="btn btn-sm btn-outline-light" href="{{ url_for('main.descargar_reflexion', reflection_id=g.id) }}">Descargar PNG</a>
+      <article class="card card-surface h-100 rounded-4 p-4 border-0 shadow position-relative">
+        <div class="mb-3">
+          <span class="text-gold small fw-bold uppercase tracking-wider">{{ g.referencia_sugerida }}</span>
         </div>
-      </div>
+        
+        <p class="small text-white fw-light mb-4 flex-grow-1">"{{ g.texto_gemini }}"</p>
+        
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+          <span class="text-muted small">{{ g.created_at.strftime('%d/%m/%Y') }}</span>
+          {% if g.libro %}
+          <a href="{{ url_for('main.historial_por_libro', libro=g.libro) }}" class="btn btn-sm btn-outline-gold rounded-pill px-3">
+            Ver más de {{ g.libro }}
+          </a>
+          {% endif %}
+        </div>
+      </article>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <p class="text-muted">Aún no has generado tarjetas. Usa el formulario de arriba para crear la primera.</p>
+  <div class="card card-surface p-5 text-center rounded-4 border-dashed">
+    <p class="text-muted mb-0">Aún no has generado tarjetas. Usa el formulario de arriba para crear la primera.</p>
+  </div>
   {% endif %}
 </section>
+
+<style>
+.tracking-wider { letter-spacing: 1px; }
+.card-surface {
+    background: #1a1d26;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: transform 0.2s ease;
+}
+.card-surface:hover {
+    transform: translateY(-3px);
+    background: #1e222d;
+}
+.text-gold { color: #d4af37; }
+.btn-gold { 
+    background-color: #d4af37; 
+    color: #000; 
+    border: none;
+    font-weight: 600;
+}
+.btn-gold:hover {
+    background-color: #e5c048;
+}
+.btn-outline-gold {
+    color: #d4af37;
+    border-color: #d4af37;
+}
+.btn-outline-gold:hover {
+    background-color: #d4af37;
+    color: #000;
+}
+.border-dashed {
+    border: 1.5px dashed rgba(255,255,255,0.1);
+}
+</style>
 {% endblock %}

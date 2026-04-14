@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Historial: {{ libro }} — Fe y Reflexión{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.biblia') }}" class="text-gold">Biblia</a></li>
+    <li class="breadcrumb-item active text-white" aria-current="page">{{ libro }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Tus tarjetas de {{ libro }}</h1>
+  <span class="badge bg-gold text-dark p-2 rounded-3">{{ tarjetas|length }} tarjetas</span>
+</div>
+
+{% if tarjetas %}
+<div class="row g-4">
+  {% for t in tarjetas %}
+  <div class="col-md-6 col-lg-4">
+    <article class="card card-surface h-100 rounded-4 p-4 border-0 shadow-lg position-relative overflow-hidden">
+      <!-- Decoración sutil -->
+      <div class="position-absolute top-0 end-0 p-3 opacity-25">
+        <i class="bi bi-bookmark-star-fill text-gold h2"></i>
+      </div>
+      
+      <div class="mb-3">
+        <span class="text-gold small fw-bold tracking-wider text-uppercase">{{ t.referencia_sugerida }}</span>
+      </div>
+      
+      <blockquote class="blockquote mb-4">
+        <p class="fs-5 text-white fw-light italic">"{{ t.texto_gemini }}"</p>
+      </blockquote>
+      
+      <div class="mt-auto pt-3 border-top border-secondary border-opacity-25">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted small">{{ t.created_at.strftime('%d %b, %Y') }}</span>
+          <div class="btn-group">
+             <button class="btn btn-sm btn-outline-gold rounded-pill px-3 py-1" onclick="copyCardText(this, '{{ t.texto_gemini|replace("'", "\\'") }} - {{ t.referencia_sugerida }}')">
+               <i class="bi bi-clipboard me-1"></i> Copiar
+             </button>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card card-surface p-5 text-center rounded-4 border-dashed">
+  <div class="mb-3">
+    <i class="bi bi-journal-x h1 text-muted"></i>
+  </div>
+  <h2 class="h5 text-white">No hay tarjetas para este libro</h2>
+  <p class="text-muted">Parece que aún no has generado reflexiones para {{ libro }}.</p>
+  <a href="{{ url_for('main.reflexiones') }}" class="btn btn-gold mt-3">Crear mi primera reflexión</a>
+</div>
+{% endif %}
+
+<script>
+function copyCardText(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copiado';
+        btn.classList.replace('btn-outline-gold', 'btn-gold');
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.replace('btn-gold', 'btn-outline-gold');
+        }, 2000);
+    });
+}
+</script>
+
+<style>
+.tracking-wider { letter-spacing: 1.5px; }
+.card-surface {
+    background: linear-gradient(145deg, #1e222d, #161a23);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-surface:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.text-gold { color: #d4af37; }
+.btn-outline-gold {
+    color: #d4af37;
+    border-color: #d4af37;
+}
+.btn-outline-gold:hover {
+    background-color: #d4af37;
+    color: #000;
+}
+.btn-gold {
+    background-color: #d4af37;
+    color: #000;
+    border: none;
+}
+.border-dashed {
+    border: 2px dashed rgba(255,255,255,0.1);
+}
+</style>
+{% endblock %}
