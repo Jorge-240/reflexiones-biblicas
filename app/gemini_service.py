@@ -39,28 +39,25 @@ def generar_reflexion_biblica(tema_usuario: str | None, used_references: list[st
     Devuelve un dict con: cita_corta, referencia, reflexion (párrafo breve), tono, libro.
     """
     _configure()
-    model_names = ("gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-latest")
-
+    # Priorizamos 1.5-flash que suele tener cuotas más estables en el tier gratuito
+    model_names = ("gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash")
+    
+    # Contexto de pasajes usados
     history_context = ""
     if used_references:
-        # Solo enviamos las últimas 20 para no saturar el prompt pero dar variedad
-        history_context = f"\nPasajes ya usados recientemente (EVITA ESTOS): {', '.join(used_references[-20:])}"
+        history_context = f"\nPasajes ya usados (EVITA ESTOS): {', '.join(used_references[-15:])}"
 
-    instruccion = f"""Eres un asistente cristiano respetuoso y profundo. Tu objetivo es generar una reflexión bíblica única.
+    instruccion = f"""Eres un asistente cristiano respetuoso. Tu objetivo es generar una reflexión bíblica única.
 {history_context}
 
-Responde SOLO con un JSON válido, sin markdown, con estas claves exactas:
-"cita_corta": el versículo o frase bíblica real (fiel al texto original),
-"referencia": libro, capítulo y versículo (ej. "Juan 3:16"),
-"libro": solo el nombre del libro bíblico (ej. "Juan"),
-"reflexion": un párrafo de 3 a 5 oraciones con una aplicación práctica y pastoral para el día a día,
-"tono": una sola palabra (ej. esperanza, fortaleza, consuelo).
+Responde SOLO con un JSON válido, sin markdown:
+"cita_corta": el versículo real,
+"referencia": libro y pasaje (ej. "Salmos 23:1"),
+"libro": nombre del libro (ej. "Salmos"),
+"reflexion": 3-4 oraciones de aplicación pastoral,
+"tono": una palabra (ej. esperanza).
 
-Condiciones:
-1. Si el usuario pide un tema o libro, PRIORIZA ese contexto.
-2. Si no pide nada, elige un pasaje poderoso y menos común para variar.
-3. El contenido debe ser 100% bíblico y respetuoso.
-4. No repitas pasajes obvios todo el tiempo."""
+Si el usuario pide un tema o libro, úsalo obligatoriamente. No repitas pasajes obvios."""
 
     if tema_usuario and tema_usuario.strip():
         user_part = f'Petición del usuario: "{tema_usuario.strip()}"'
@@ -72,31 +69,28 @@ Condiciones:
         try:
             model = genai.GenerativeModel(name)
             resp = model.generate_content([instruccion, user_part])
-            text = ""
-            if resp.candidates:
-                parts = []
-                for c in resp.candidates:
-                    if c.content and c.content.parts:
-                        for p in c.content.parts:
-                            if hasattr(p, "text") and p.text:
-                                parts.append(p.text)
-                text = "".join(parts).strip()
-            if not text:
-                text = (getattr(resp, "text", None) or "").strip()
+            text = (getattr(resp, "text", None) or "").strip()
             
-            # Limpieza de JSON
+            # Limpieza y parseo
             text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
             text = re.sub(r"\s*```$", "", text)
-            
             data = json.loads(text)
+            
+            # Validación mínima
             for k in ("cita_corta", "referencia", "reflexion", "libro"):
                 if k not in data or not str(data[k]).strip():
-                    raise ValueError(f"Campo '{k}' faltante o vacío.")
+                    raise ValueError(f"Campo '{k}' faltante.")
             return data
         except Exception as e:
-            errores.append(f"{name}: {str(e)}")
+            if is_quota_error(e):
+                errores.append("Gemini ha alcanzado su límite de uso gratuito por este minuto. Espera 60 segundos por favor.")
+            else:
+                errores.append(f"{name}: {str(e)}")
             continue
     
     if errores:
+        # Mostramos un error limpio si es de cuota
+        if "límite" in errores[0]:
+            raise RuntimeError(errores[0])
         raise RuntimeError(f"Error en Gemini: {errores[0]}")
-    raise RuntimeError("No se pudo obtener una reflexión de Gemini.")
+    raise RuntimeError("No se pudo obtener una reflexión en este momento.")

@@ -50,11 +50,9 @@ def create_app(config_class=Config):
         return render_template("errors/404.html"), 404
 
     @app.errorhandler(500)
-    def internal_error(e):
+    def internal_error(_e):
         db.session.rollback()
-        # Temporalmente mostramos el error para depurar
-        error_msg = str(e)
-        return render_template("errors/500.html", error_msg=error_msg), 500
+        return render_template("errors/500.html"), 500
 
     with app.app_context():
         db.create_all()
@@ -68,22 +66,14 @@ def create_app(config_class=Config):
                 
                 # Añadir 'libro' si falta
                 if 'libro' not in columns:
-                    print(">>> Migración: Añadiendo columna 'libro'...")
                     db.session.execute(text("ALTER TABLE generated_reflections ADD COLUMN libro VARCHAR(100) AFTER referencia_sugerida;"))
                     db.session.commit()
-                    print(">>> Migración: Columna 'libro' añadida.")
                 
-                # Modificar 'archivo_relativo' para que sea nullable
-                print(">>> Migración: Asegurando que 'archivo_relativo' sea nullable...")
+                # Asegurarse de que archivo_relativo sea nullable
                 db.session.execute(text("ALTER TABLE generated_reflections MODIFY archivo_relativo VARCHAR(512) NULL;"))
                 db.session.commit()
-                print(">>> Migración: 'archivo_relativo' actualizado.")
-            else:
-                print(">>> Migración: Tabla 'generated_reflections' no encontrada, se creará con db.create_all().")
-        except Exception as e:
+        except Exception:
             db.session.rollback()
-            print(f">>> ERROR EN MIGRACIÓN: {e}")
-            # No bloqueamos el arranque, pero informamos.
 
         from app import seed
         seed.seed_curated_reflections()
