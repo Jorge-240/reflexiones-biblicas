@@ -94,5 +94,5 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", MAIL_USERNAME)
 
     APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://127.0.0.1:5000").rstrip("/")
-    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+    GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
     DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "andres.herreraote@gmail.com")

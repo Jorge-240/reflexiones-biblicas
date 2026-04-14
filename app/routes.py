@@ -18,7 +18,7 @@ from app.forms import (
     ResetPasswordForm,
     SupportForm,
 )
-from app.gemini_service import generar_reflexion_biblica
+from app.ai_service import generar_reflexion_biblica
 from app.models import CuratedReflection, GeneratedReflection, SupportReport, User
 
 main_bp = Blueprint("main", __name__)
