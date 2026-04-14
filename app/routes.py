@@ -1,4 +1,5 @@
 import os
+from threading import Thread
 from sqlalchemy.exc import IntegrityError
 
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, send_from_directory, url_for
@@ -184,12 +185,36 @@ def registro():
                 "danger",
             )
             return render_template("registro.html", form=form), 400
-        try:
-            send_welcome_email(u)
-        except Exception as e:
-            flash(f"Cuenta creada, pero el correo de bienvenida no se pudo enviar: {e}", "warning")
-        flash("Cuenta creada. Ya puedes iniciar sesión.", "success")
-        return redirect(url_for("auth.login"))
+        except Exception:
+            db.session.rollback()
+            flash(
+                "No se pudo crear la cuenta por un problema interno o de base de datos. "
+                "Vuelve a intentarlo en unos segundos.",
+                "danger",
+            )
+            return render_template("registro.html", form=form), 500
+
+        # Entramos al perfil inmediatamente; el correo va en segundo plano.
+        login_user(u)
+
+        def _send_welcome_async(user_id: int):
+            try:
+                with current_app.app_context():
+                    user = User.query.get(user_id)
+                    if user:
+                        send_welcome_email(user)
+            except Exception:
+                # Importante: no debe romper la navegación del usuario.
+                # (Podemos mejorar esto con logs en el futuro.)
+                pass
+
+        Thread(target=_send_welcome_async, args=(u.id,), daemon=True).start()
+
+        flash(
+            "Cuenta creada y tu perfil está listo. Si el correo de bienvenida no llegó todavía, revisa unos minutos más tarde.",
+            "success",
+        )
+        return redirect(url_for("main.perfil"))
     return render_template("registro.html", form=form)
 
 

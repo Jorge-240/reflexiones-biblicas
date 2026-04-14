@@ -14,6 +14,21 @@ def _configure():
     genai.configure(api_key=key)
 
 
+def _humanize_gemini_error(error: Exception) -> str:
+    text = str(error)
+    upper = text.upper()
+    if "API_KEY_INVALID" in upper or "API KEY NOT VALID" in upper:
+        return (
+            "La clave de Gemini no es válida. Corrige la variable `GEMINI_API_KEY` "
+            "en Railway con una API key real de Google AI Studio."
+        )
+    if "PERMISSION_DENIED" in upper:
+        return "Gemini rechazó la solicitud por permisos insuficientes. Revisa la API key configurada."
+    if "QUOTA" in upper or "RATE LIMIT" in upper or "RESOURCE_EXHAUSTED" in upper:
+        return "Gemini no pudo responder por límite de uso o cuota. Intenta de nuevo más tarde."
+    return text
+
+
 def generar_reflexion_biblica(tema_usuario: str | None) -> dict:
     """
     Devuelve un dict con: cita_corta, referencia, reflexion (párrafo breve), tono.
@@ -57,6 +72,9 @@ El contenido debe ser apropiado para toda la familia. No incluyas texto fuera de
                     raise ValueError("Respuesta de IA incompleta.")
             return data
         except Exception as e:
-            errores.append(f"{name}: {e}")
+            errores.append(f"{name}: {_humanize_gemini_error(e)}")
             continue
-    raise RuntimeError("No se pudo obtener una reflexión de Gemini. " + " | ".join(errores))
+    if errores:
+        first = errores[0].split(": ", 1)[1] if ": " in errores[0] else errores[0]
+        raise RuntimeError(first)
+    raise RuntimeError("No se pudo obtener una reflexión de Gemini en este momento.")
