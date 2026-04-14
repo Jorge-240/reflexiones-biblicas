@@ -1,10 +1,10 @@
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFError, CSRFProtect
 
 from config import Config, assert_db_not_localhost_in_cloud
 
@@ -40,6 +40,19 @@ def create_app(config_class=Config):
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        return render_template("errors/400.html", mensaje=str(e)), 400
+
+    @app.errorhandler(404)
+    def not_found(_e):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def internal_error(_e):
+        db.session.rollback()
+        return render_template("errors/500.html"), 500
 
     with app.app_context():
         db.create_all()

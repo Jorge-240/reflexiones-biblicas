@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Error interno{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card card-surface p-4 rounded-4 text-center">
+      <h1 class="h3 mb-3">Ocurrió un problema interno</h1>
+      <p class="text-muted mb-3">
+        La aplicación no pudo completar esta acción. Intenta de nuevo en unos segundos.
+        Si el problema continúa, envíanos un reporte desde soporte.
+      </p>
+      <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <a class="btn btn-gold" href="{{ url_for('main.index') }}">Volver al inicio</a>
+        <a class="btn btn-outline-light" href="{{ url_for('main.soporte') }}">Reportar problema</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

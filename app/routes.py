@@ -1,4 +1,5 @@
 import os
+from sqlalchemy.exc import IntegrityError
 
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, send_from_directory, url_for
 from flask_login import current_user, login_required, login_user, logout_user
@@ -172,8 +173,17 @@ def registro():
             email=form.email.data.strip().lower(),
         )
         u.set_password(form.password.data)
-        db.session.add(u)
-        db.session.commit()
+        try:
+            db.session.add(u)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash(
+                "No se pudo crear la cuenta porque el usuario o el correo ya existen. "
+                "Prueba con otros datos o inicia sesión si ya te registraste.",
+                "danger",
+            )
+            return render_template("registro.html", form=form), 400
         try:
             send_welcome_email(u)
         except Exception as e:
