@@ -39,8 +39,8 @@ def generar_reflexion_biblica(tema_usuario: str | None, used_references: list[st
     Devuelve un dict con: cita_corta, referencia, reflexion (párrafo breve), tono, libro.
     """
     _configure()
-    # Usamos modelos con nombres compatibles con la versión de google-generativeai y el tier gratuito
-    model_names = ("gemini-1.5-flash-latest", "gemini-pro")
+    # Usamos gemini-pro como modelo principal por su máxima compatibilidad con la versión actual
+    model_names = ("gemini-pro", "gemini-1.0-pro")
     history_context = ""
     if used_references:
         history_context = f"\nPasajes ya usados (EVITA ESTOS): {', '.join(used_references[-15:])}"
@@ -63,6 +63,8 @@ Si el usuario pide un tema o libro, úsalo obligatoriamente. No repitas pasajes 
         user_part = "Genera una reflexión libre y edificante."
 
     errores = []
+    quota_error_msg = None
+
     for name in model_names:
         try:
             model = genai.GenerativeModel(name)
@@ -81,14 +83,13 @@ Si el usuario pide un tema o libro, úsalo obligatoriamente. No repitas pasajes 
             return data
         except Exception as e:
             if is_quota_error(e):
-                errores.append("Gemini ha alcanzado su límite de uso gratuito por este minuto. Espera 60 segundos por favor.")
+                quota_error_msg = "Has alcanzado el límite de uso gratuito de la Inteligencia Artificial por este minuto. Espera 60 segundos y vuelve a intentarlo."
             else:
                 errores.append(f"{name}: {str(e)}")
             continue
     
-    if errores:
-        # Mostramos un error limpio si es de cuota
-        if "límite" in errores[0]:
-            raise RuntimeError(errores[0])
+    if quota_error_msg:
+        raise RuntimeError(quota_error_msg)
+    elif errores:
         raise RuntimeError(f"Error en Gemini: {errores[0]}")
     raise RuntimeError("No se pudo obtener una reflexión en este momento.")
