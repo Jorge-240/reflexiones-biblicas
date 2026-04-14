@@ -10,12 +10,10 @@ from app.bible_library import BIBLE_BOOK_GROUPS, BIBLE_REFLECTIONS, select_bible
 from app.emails import send_password_reset_email, send_support_to_developer, send_welcome_email
 from app.forms import (
     ChangePasswordForm,
-    ForgotPasswordForm,
     GeminiReflectionForm,
     LoginForm,
     ProfileForm,
     RegistrationForm,
-    ResetPasswordForm,
     SupportForm,
 )
 from app.ai_service import generar_reflexion_biblica
@@ -23,11 +21,6 @@ from app.models import CuratedReflection, GeneratedReflection, SupportReport, Us
 
 main_bp = Blueprint("main", __name__)
 auth_bp = Blueprint("auth", __name__)
-
-
-def _serializer():
-    return URLSafeTimedSerializer(current_app.config["SECRET_KEY"], salt="fe-reflexion-recovery")
-
 
 @main_bp.route("/")
 def index():
@@ -277,51 +270,3 @@ def logout():
     logout_user()
     flash("Sesión cerrada.", "info")
     return redirect(url_for("main.index"))
-
-
-@auth_bp.route("/recuperar", methods=["GET", "POST"])
-def recuperar():
-    if current_user.is_authenticated:
-        return redirect(url_for("main.reflexiones"))
-    form = ForgotPasswordForm()
-    if form.validate_on_submit():
-        email = form.email.data.strip().lower()
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            flash("Ese correo no se encuentra registrado.", "danger")
-            return render_template("recuperar.html", form=form)
-        token = _serializer().dumps({"uid": user.id})
-        reset_url = url_for("auth.restablecer", token=token, _external=True)
-        try:
-            send_password_reset_email(user, reset_url)
-        except Exception as e:
-            flash(f"No se pudo enviar el correo: {e}", "danger")
-            return render_template("recuperar.html", form=form)
-        flash("Revisa tu bandeja de entrada para continuar.", "success")
-        return redirect(url_for("auth.login"))
-    return render_template("recuperar.html", form=form)
-
-
-@auth_bp.route("/restablecer/<token>", methods=["GET", "POST"])
-def restablecer(token):
-    if current_user.is_authenticated:
-        return redirect(url_for("main.reflexiones"))
-    try:
-        data = _serializer().loads(token, max_age=60 * 60 * 24)
-    except SignatureExpired:
-        flash("El enlace expiró. Solicita uno nuevo.", "danger")
-        return redirect(url_for("auth.recuperar"))
-    except BadSignature:
-        flash("Enlace no válido.", "danger")
-        return redirect(url_for("auth.recuperar"))
-    user = User.query.get(data.get("uid"))
-    if not user:
-        flash("Usuario no encontrado.", "danger")
-        return redirect(url_for("auth.login"))
-    form = ResetPasswordForm()
-    if form.validate_on_submit():
-        user.set_password(form.password.data)
-        db.session.commit()
-        flash("Contraseña actualizada. Inicia sesión.", "success")
-        return redirect(url_for("auth.login"))
-    return render_template("restablecer.html", form=form)
