@@ -29,6 +29,11 @@ def _humanize_gemini_error(error: Exception) -> str:
     return text
 
 
+def is_quota_error(error: Exception) -> bool:
+    upper = str(error).upper()
+    return "QUOTA" in upper or "RATE LIMIT" in upper or "RESOURCE_EXHAUSTED" in upper
+
+
 def generar_reflexion_biblica(tema_usuario: str | None) -> dict:
     """
     Devuelve un dict con: cita_corta, referencia, reflexion (párrafo breve), tono.

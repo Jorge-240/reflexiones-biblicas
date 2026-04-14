@@ -1,4 +1,5 @@
 import os
+import random
 from threading import Thread
 from sqlalchemy.exc import IntegrityError
 
@@ -17,7 +18,7 @@ from app.forms import (
     ResetPasswordForm,
     SupportForm,
 )
-from app.gemini_service import generar_reflexion_biblica
+from app.gemini_service import generar_reflexion_biblica, is_quota_error
 from app.image_generator import crear_tarjeta_reflexion
 from app.models import CuratedReflection, GeneratedReflection, SupportReport, User
 
@@ -61,8 +62,26 @@ def generar_reflexion_imagen():
     try:
         data = generar_reflexion_biblica(tema)
     except Exception as e:
-        flash(str(e), "danger")
-        return redirect(url_for("main.reflexiones"))
+        # Si Gemini está sin cuota, seguimos con una reflexión curada para no bloquear la función.
+        if is_quota_error(e):
+            curated = CuratedReflection.query.order_by(CuratedReflection.orden.asc(), CuratedReflection.id.asc()).all()
+            if curated:
+                chosen = random.choice(curated)
+                data = {
+                    "cita_corta": chosen.cita,
+                    "referencia": chosen.referencia,
+                    "reflexion": chosen.reflexion,
+                }
+                flash(
+                    "La IA está temporalmente sin cuota. Generamos una tarjeta con una reflexión curada mientras se restablece.",
+                    "warning",
+                )
+            else:
+                flash(str(e), "danger")
+                return redirect(url_for("main.reflexiones"))
+        else:
+            flash(str(e), "danger")
+            return redirect(url_for("main.reflexiones"))
 
     out_dir = os.path.join(current_app.static_folder, "generated")
     try:
