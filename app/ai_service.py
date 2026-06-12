@@ -1,24 +1,26 @@
 import json
 import re
 from flask import current_app
-from groq import Groq
+import google.generativeai as genai
 
 
-def _get_client():
-    key = current_app.config.get("GROQ_API_KEY", "").strip()
+def _setup_gemini():
+    key = current_app.config.get("GEMINI_API_KEY", "").strip()
     if not key:
         raise RuntimeError(
-            "Falta GROQ_API_KEY en la configuración. Añádela en el archivo .env o en las variables de Railway para generar reflexiones."
+            "Falta GEMINI_API_KEY en la configuración. Añádela en el archivo .env o en las variables de Render para generar reflexiones."
         )
-    return Groq(api_key=key)
+    genai.configure(api_key=key)
 
 
 def generar_reflexion_biblica(tema_usuario: str | None, used_references: list[str] = None) -> dict:
     """
     Devuelve un dict con: cita_corta, referencia, reflexion (párrafo breve), tono, libro.
     """
-    client = _get_client()
-    model_name = "llama-3.3-70b-versatile"
+    _setup_gemini()
+    
+    # Usaremos gemini-1.5-flash que es rápido y soporta JSON output
+    model = genai.GenerativeModel("gemini-1.5-flash")
     
     history_context = ""
     if used_references:
@@ -42,18 +44,16 @@ Si el usuario pide un tema o libro, úsalo obligatoriamente. Usa variedad en la 
         user_part = "Genera una reflexión libre y edificante sobre un pasaje hermoso."
 
     try:
-        response = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": instruccion},
-                {"role": "user", "content": user_part}
-            ],
-            model=model_name,
-            response_format={"type": "json_object"},
-            temperature=0.7,
-            max_tokens=600,
+        response = model.generate_content(
+            f"{instruccion}\n\n{user_part}",
+            generation_config=genai.types.GenerationConfig(
+                response_mime_type="application/json",
+                temperature=0.7,
+                max_output_tokens=600,
+            )
         )
         
-        text = response.choices[0].message.content.strip()
+        text = response.text.strip()
         data = json.loads(text)
         
         # Validación mínima
@@ -64,9 +64,9 @@ Si el usuario pide un tema o libro, úsalo obligatoriamente. Usa variedad en la 
         
     except Exception as e:
         error_msg = str(e).lower()
-        if "rate_limit" in error_msg or "rate limit" in error_msg:
-            raise RuntimeError("Has alcanzado el límite de uso gratuito por este minuto. Espera un momento y vuelve a intentarlo.")
-        elif "authentication_error" in error_msg or "invalid api key" in error_msg:
-             raise RuntimeError("La API Key de Groq es inválida o no está configurada correctamente.")
+        if "quota" in error_msg or "rate limit" in error_msg or "429" in error_msg:
+            raise RuntimeError("Has alcanzado el límite de uso de la API de Gemini. Espera un momento y vuelve a intentarlo.")
+        elif "api_key" in error_msg or "invalid" in error_msg or "400" in error_msg:
+             raise RuntimeError("La API Key de Gemini es inválida o no está configurada correctamente.")
         else:
              raise RuntimeError(f"Error de conexión con IA: {str(e)}")
