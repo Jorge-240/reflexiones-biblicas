@@ -1,26 +1,22 @@
 import json
-import re
 from flask import current_app
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
-
-def _setup_gemini():
+def _get_gemini_client():
     key = current_app.config.get("GEMINI_API_KEY", "").strip()
     if not key:
         raise RuntimeError(
             "Falta GEMINI_API_KEY en la configuración. Añádela en el archivo .env o en las variables de Render para generar reflexiones."
         )
-    genai.configure(api_key=key)
+    return genai.Client(api_key=key)
 
 
 def generar_reflexion_biblica(tema_usuario: str | None, used_references: list[str] = None) -> dict:
     """
     Devuelve un dict con: cita_corta, referencia, reflexion (párrafo breve), tono, libro.
     """
-    _setup_gemini()
-    
-    # Usaremos gemini-1.5-flash que es rápido y soporta JSON output
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    client = _get_gemini_client()
     
     history_context = ""
     if used_references:
@@ -44,13 +40,14 @@ Si el usuario pide un tema o libro, úsalo obligatoriamente. Usa variedad en la 
         user_part = "Genera una reflexión libre y edificante sobre un pasaje hermoso."
 
     try:
-        response = model.generate_content(
-            f"{instruccion}\n\n{user_part}",
-            generation_config=genai.types.GenerationConfig(
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=f"{instruccion}\n\n{user_part}",
+            config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=0.7,
                 max_output_tokens=600,
-            )
+            ),
         )
         
         text = response.text.strip()
